@@ -1,2 +1,3 @@
-/console/nbproject/private/
-/nbproject/private/
+*~
+.gitignore
+nbproject
