@@ -48,16 +48,16 @@ class Console
   
   def write (text, font = nil) 
     if (!font)
-     font =  @default_font
+     font = @default_font
     end
-    print font.to_s + text + Font::RESET
+    print font.to_bash + text + Font::RESET
   end
   
   def write_ln (text, font = nil) 
     if (!font)
      font =  @default_font
     end
-    print font + text << "\n" << Font::RESET
+    print font.to_bash + text << "\n" << Font::RESET
   end
   
   def erase_to_end_line

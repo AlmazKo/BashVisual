@@ -22,50 +22,55 @@ class Font
 
   RESET = "\e[0m"
    
-  STD   = 0
+  #types font
+  STD        = 0
   BOLD       = 1
   UNDERLINE  = 2
   BLINK      = 4
   
-  class << self
-    def get (font = STD, foreground = WHITE, background = nil)
-      bash_command = ''
-      
-      if (font == STD)
+  attr_reader :font, :foreground, :background
+  
+  def initialize (font = STD, foreground = WHITE, background = nil)
+    @font, @foreground, @background = font, foreground, background
+    
+    @bash_command = ''
+
+    if (font == STD)
       if (foreground and foreground<10)
-        bash_command << "\e[3#{foreground}m"
+        @bash_command << "\e[3#{foreground}m"
       else
-        bash_command << "\e[9#{foreground-10}m"
+        @bash_command << "\e[9#{foreground-10}m"
       end
-             
-      end
-      
-      if (font & BOLD != 0)
-        if (foreground<10)
-            bash_command << "\e[1;3#{foreground}m"
-          else
-            bash_command << "\e[1;9#{foreground-10}m"
-        end
-      end
-
-      if (font & UNDERLINE != 0)
-        if (foreground<10)
-            bash_command << "\e[4;3#{foreground}m"
-          else
-            bash_command << "\e[4;9#{foreground-10}m"
-        end
-      end
-
-      if (background.instance_of? Fixnum)
-          if (background<10)
-            bash_command << "\e[4#{background}m"
-          else 
-            bash_command << "\e[10#{background-10}m"
-          end
-      end
-      bash_command
     end
+
+    if (font & BOLD != 0)
+      if (foreground<10)
+          @bash_command << "\e[1;3#{foreground}m"
+        else
+          @bash_command << "\e[1;9#{foreground-10}m"
+      end
+    end
+
+    if (font & UNDERLINE != 0)
+      if (foreground<10)
+          @bash_command << "\e[4;3#{foreground}m"
+        else
+          @bash_command << "\e[4;9#{foreground-10}m"
+      end
+    end
+
+    if (background.instance_of? Fixnum)
+        if (background<10)
+          @bash_command << "\e[4#{background}m"
+        else 
+          @bash_command << "\e[10#{background-10}m"
+        end
+    end
+
   end
 
-  
+  def to_bash
+    @bash_command
+  end
+ 
 end
