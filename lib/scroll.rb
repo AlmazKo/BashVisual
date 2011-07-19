@@ -47,7 +47,7 @@ class Scroll
     @adapt_size_message = options[:adapt_size_message] ? options[:adapt_size_message] : false
     
     @start = options[:start] ? options[:start] : BEGINNING
-    @start = options[:separator?] ? options[:separator?] : false
+    @separator = options[:separator] ? options[:separator] : false
     @font = options[:font] ? options[:font] : ''
 
     @stack = []
@@ -60,9 +60,9 @@ class Scroll
   end
   
   def add (message, font = @font)
-    @stack << (prefix() << message.to_s)
-    @console.draw_rectangle(@x+1, @y, @area_width-1, @area_height, @font)
-    index = write_message(font)
+    @stack << [(prefix() << message.to_s), font]
+    @console.draw_rectangle(@x+1, @y, @area_width, @area_height, @font)
+    index = write_message()
     @stack.slice!(0, index)
   end
   
@@ -80,15 +80,16 @@ class Scroll
 
   private
   
-  def write_message (font)
+  def write_message ()
     available_area_width = @area_width
     available_area_height = @area_height
     (@stack.size - 1).downto(0) do |i|
-
+   
+      font = @stack[i][1]
       # TODO don't use
       # max_height = @message_block_height > available_area_height ? available_area_height : @message_block_height
       max_available_width = @message_block_width > available_area_width ? available_area_width : @message_block_width
-      message = @stack[i].lines.to_a
+      message = @stack[i][0].lines.to_a
       message = message.slice(0, @message_block_height) if message.size > @message_block_height
       message.slice!(0, available_area_height + 1) if message.size > available_area_height
 
@@ -102,10 +103,25 @@ class Scroll
         line.slice!(max_available_width, line.size - max_available_width)
       } 
 
+      if (@separator == true)
+        message[message.size-1] = Font.new(Font::UNDERLINE, font.foreground, font.background).to_bash + 
+          message.last.ljust(max_available_width, ' ')  
+      end
+      if (@separator.instance_of? String)
+        if (message.size > available_area_height)
+          message[message.size-1] = @separator[0] * max_available_width
+        else
+          message << @separator[0] * max_available_width
+        end
+        
+      end
 
-      message[message.size-1] = Font.new(Font::UNDERLINE, font.foreground, font.background).to_bash + 
-        message.last.ljust(max_available_width, ' ')
-      write(@x, @y + available_area_height - message.size - 1, message, font)
+      if ( @start == BEGINNING) 
+        write(@x, @y + available_area_height - message.size - 1, message, font)
+      else
+         write(@x, @y + message.size*(@stack.size - i -1) -1, message, font)
+      end
+     
       if (VERTICAL == @type)
         available_area_width = @area_width
         available_area_height -= message.count
@@ -121,9 +137,10 @@ class Scroll
   end
   
   def write (x, y, message, font)
+    
     @mutex.synchronize { 
       message.each_with_index { |text, i|   
-        @console.write_to_position(x, y + i, text, font)
+       @console.write_to_position(x, y + i, text, font)
       }
     }
   end
