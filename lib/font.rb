@@ -35,6 +35,7 @@ class Font
     
     @bash_command = ''
 
+    @string = "<type=%s, background=%s. foreground=%s>" % [@font, @foreground, @background]
     if (font == STD)
       if (foreground and foreground<10)
         @bash_command << "\e[3#{foreground}m"
@@ -72,5 +73,10 @@ class Font
   def to_bash
     @bash_command
   end
+  
+  def to_s
+    @string
+  end
+
  
 end
