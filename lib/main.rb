@@ -1,8 +1,8 @@
 # coding: utf-8
 $:.unshift(File.dirname(__FILE__))
 
-require 'console'
-require 'font'
+require 'bash/console'
+require 'bash/font'
 require 'scroll'
 
 font = Font.new(Font::STD, Font::LIGHT_BLUE)
