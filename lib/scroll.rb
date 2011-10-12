@@ -91,7 +91,7 @@ class Scroll
       max_available_width = @message_block_width > available_area_width ? available_area_width : @message_block_width
       message = @stack[i][0].lines.to_a
       message = message.slice(0, @message_block_height) if message.size > @message_block_height
-      message.slice!(0, available_area_height + 1) if message.size > available_area_height
+      message = message.slice(0, available_area_height) if message.size > available_area_height
 
       max_used_width = 1
       message.each { |line| 
@@ -124,7 +124,7 @@ class Scroll
      
       if (VERTICAL == @type)
         available_area_width = @area_width
-        available_area_height -= message.count
+        available_area_height -= message.size
         return i if (available_area_height <= 0) 
       else
         available_area_width -= max_used_width
