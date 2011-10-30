@@ -1,6 +1,12 @@
-# coding: utf-8
+####!> coding: 
 $:.unshift(File.dirname(__FILE__))
+print "\u2580"
+exit
+255.downto(0) { |i|  
+  puts i.chr
+}
 
+exit
 require 'bash/console'
 require 'bash/font'
 require 'scroll'
