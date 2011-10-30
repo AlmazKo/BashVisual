@@ -7,51 +7,38 @@ class Scroll
   FORWARD  = 1
   BACKWARD = -1
   
-  BEGINNING = 1
-  ENDING    = 2
-  
-  VERTICAL   = 1
-  HORIZONTAL = 2
+  BEGINNING = false
+  ENDING    = true
   
   attr_accessor :console 
+  
   def initialize(options)
 
-    if (options[:coordinates])
-      @x = options[:coordinates].size > 0 ? options[:coordinates].shift : 1
-      @y = options[:coordinates].size > 0 ? options[:coordinates].shift : 1
-    end
-    
-    if (options[:size])
-      @area_width  = options[:size].size > 0 ? options[:size].shift : 1
-      @area_height = options[:size].size > 0 ? options[:size].shift : 1
-    end
+    @x, @y = options[:coordinates]
+    @x = @x.to_i
+    @y = @y.to_i
 
-    @type = options[:type] ? options[:type] : VERTICAL
-    
-    if (options[:message_block_size])
-      @message_block_width  = options[:message_block_size].size > 0 ? options[:message_block_size].shift : 1
-      @message_block_height = options[:message_block_size].size > 0 ? options[:message_block_size].shift : 1
-
-      @message_block_width  = @area_width if @message_block_width > @area_width
-      @message_block_height = @area_height if @message_block_height > @area_height
+    raise ':window_size isn\'t array' unless options[:window_size].instance_of? Array
+    raise 'size :window_size must be great than 1' if options[:window_size].size < 2
       
-      @message_block_width  = 1 if @message_block_width < 1
-      @message_block_height = 1 if @message_block_height < 1
-    else
-      @message_block_width  = @area_width
-      @message_block_height = 1
-    end
+    @area_width, @area_height = options[:window_size]
+    @area_width = @area_width.to_i
+    @area_height = @area_height.to_i
+
+    @message_block_size = options[:message_block_size] ? options[:message_block_size].to_i : 1
+    @message_block_size = 1 if @message_block_size < 1
    
     @prefix = options[:prefix] ? options[:prefix] : nil
     
     @adapt_size_message = options[:adapt_size_message] ? options[:adapt_size_message] : false
     
-    @start = options[:start] ? options[:start] : BEGINNING
+    @is_wrap = true
+    @start = options[:start] ? ENDING : BEGINNING
     @separator = options[:separator] ? options[:separator] : false
-    @font = options[:font] ? options[:font] : ''
+    @font = options[:font] ? options[:font] : nil
 
     @stack = []
-    @console = Console.new @font
+    @console = Console.new @font,Console::OUTPUT_STRING
     @mutex = Mutex.new
   end
   
@@ -60,10 +47,18 @@ class Scroll
   end
   
   def add (message, font = @font)
-    @stack << [(prefix() << message.to_s), font]
-    @console.draw_rectangle(@x+1, @y, @area_width, @area_height, @font)
-    index = write_message()
-    @stack.slice!(0, index)
+    
+    if @stack.size.zero? 
+      print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, @font)
+    end
+    
+    @stack << {
+      message: prefix() << message.to_s,
+         font: font
+    }
+
+    redraw()
+    #@stack.slice!(-index, index)
   end
   
   def prefix= (prefix)
@@ -79,69 +74,46 @@ class Scroll
   end
 
   private
-  
-  def write_message ()
-    available_area_width = @area_width
-    available_area_height = @area_height
-    (@stack.size - 1).downto(0) do |i|
-   
-      font = @stack[i][1]
-      # TODO don't use
-      # max_height = @message_block_height > available_area_height ? available_area_height : @message_block_height
-      max_available_width = @message_block_width > available_area_width ? available_area_width : @message_block_width
-      message = @stack[i][0].lines.to_a
-      message = message.slice(0, @message_block_height) if message.size > @message_block_height
-      message = message.slice(0, available_area_height) if message.size > available_area_height
 
-      max_used_width = 1
-      message.each { |line| 
-        line.strip!
-        line_size = line.size
-        if (line_size > max_used_width)
-          max_used_width = line_size
-        end
-        line.slice!(max_available_width, line.size - max_available_width)
-      } 
-
-      if (@separator == true)
-        message[message.size-1] = Font.new(Font::UNDERLINE, font.foreground, font.background).to_bash + 
-          message.last.ljust(max_available_width, ' ')  
-      end
-      if (@separator.instance_of? String)
-        if (message.size > available_area_height)
-          message[message.size-1] = @separator[0] * max_available_width
-        else
-          message << @separator[0] * max_available_width
-        end
-        
-      end
-
-      if ( @start == BEGINNING) 
-        write(@x, @y + available_area_height - message.size - 1, message, font)
-      else
-         write(@x, @y + message.size*(@stack.size - i -1) -1, message, font)
-      end
-     
-      if (VERTICAL == @type)
-        available_area_width = @area_width
-        available_area_height -= message.size
-        return i if (available_area_height <= 0) 
-      else
-        available_area_width -= max_used_width
-        available_area_height -= @area_height
-        return i if (available_area_width <= 0) 
-      end
+  def redraw
+    avail_area = [@area_width, @area_height]
+    @stack.reverse.each do |item|
       
+      message = item[:message].dup.lines.to_a
+      font = item[:font]
+      unless font.background
+        font = Font.new font.font, font.foreground, @font.background
+      end
+
+      avail_area = print_message(message, font, avail_area)
+      # выходим если закончилось место в области
+      return nil if avail_area[0] <= 0 or avail_area[1] <= 0
     end
-    0
+  end
+  
+  # сделать переносы в массиве строк
+  def rows_wrap! arr, max_len
+    max_used_len = 1
+    arr.each_with_index do |row, i| 
+      len = row.size
+      max_used_len = len if len > max_used_len
+      next if len <= max_len
+      tail = row.slice!(max_len,  len-max_len)
+      arr.insert(i+1, tail)
+    end
+    max_used_len
   end
   
   def write (x, y, message, font)
-    
-    @mutex.synchronize { 
-      message.each_with_index { |text, i|   
-       @console.write_to_position(x, y + i, text, font)
-      }
+
+
+    string = ''
+    message.each_with_index { |text, i|   
+     string << @console.write_to_position(x, y + i, text, font)
+    }
+      
+    @mutex.synchronize {
+      print string
     }
   end
 end
