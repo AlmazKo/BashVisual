@@ -8,6 +8,14 @@ require 'vertical_scroll'
 require 'horizontal_scroll'
 require 'common/random_text'
 
+
+def join_all
+  main = Thread.main
+  current = Thread.current
+  all = Thread.list
+  all.each {|t| t.join unless t == current or t == main}
+end
+
 default_font = Font.new(Font::STD, Font::LIGHT_BLUE)
 
 
@@ -15,9 +23,7 @@ console = Console.new(default_font)
 console.clear()
 
 window_font = Font.new(Font::STD, Font::WHITE, Font::BLUE)
-background_font = Font.new(Font::STD, Font::WHITE, Font::LIGHT_GRAY)
-console.draw_rectangle(0, 31, 124, 12, background_font)
-console.draw_window(0, 32, 122, 6, 'Example List', window_font, Console::BORDER_UTF_ROUND, [' ', ' '])
+
 
 font_scroll = Font.new(Font::STD, Font::YELLOW)
 
@@ -28,31 +34,53 @@ scroll = VerticalScroll.new(
   font: font_scroll,
   separator: "\u2508",
   start: Scroll::ENDING,
-  adapt_size_message: false,
+  adapt_size_message: true,
   prefix: ->{ Time.now.strftime('%H-%M-%S:%3N') << " " }
 )
 
+
+console.draw_window(4, 31, 122, 6, 'Example List', window_font, Console::BORDER_UTF_DOUBLE)
+
 scroll2 = HorizontalScroll.new(
-  coordinates: [1, 32],
+  coordinates: [4, 31],
   window_size: [120, 4],
   message_block_size: 10,
   font: font_scroll,
   separator: true,
-  start: Scroll::BEGINNING,
-  adapt_size_message: false
+  start: Scroll::BEGINNING
 )
+
+1.upto(28) { |y| 
+  if (10..20).include? y
+    console.write_to_position(121, y, "\u2503")
+  else
+    console.write_to_position(121, y, "\u2502")
+  end
   
-10000.times {
-  font = Font.new(Font::BOLD, rand(7), nil)
-  x = rand(40)
-  y = rand(30)
-  console.write_to_position(x, y, '.', font)
-
- # scroll.add('' << RandomText::get() << "  \n#{x} #{y}\n1221"*2)
-  font = Font.new(Font::STD, Font::rand_color(Font::BLACK), Font::BLACK)
-  scroll.add(RandomText::get() << "\n 6", font)
-  font = Font.new(Font::STD, window_font.foreground, window_font.background)
-  scroll2.add(RandomText::get(), font)
-
-  sleep(0.3)
 }
+
+Thread.new do
+  1000.times do
+    font = Font.new(Font::BOLD, rand(7), nil)
+    x = rand(40)
+    y = rand(30)
+    console.write_to_position(x, y, '.', font)
+
+    font = Font.new(Font::STD, Font::rand_color(window_font.background), window_font.background)
+    scroll.add(RandomText::get(), font)
+    scroll2.add(RandomText::get(), font)
+
+    sleep(0.7)
+  end
+end
+Thread.new do
+  1000.times do
+    font = Font.new(Font::STD, window_font.foreground, window_font.background)
+    scroll2.add(RandomText::get(), font)
+
+    sleep(0.3)
+  end
+end
+
+
+join_all

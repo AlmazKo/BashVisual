@@ -74,24 +74,26 @@ class Console
   end
   
   def draw_border(x, y, width, height, font = nil, border = BORDER_UTF)
-    raise 'width,height must be grait than 1' if (width < 2 or height < 2)
+    raise 'width,height must be great than 1' if (width < 2 or height < 2)
     
     bash = ''
     bash << @builder.save_position()
     bash << @builder.set_position(x,y)
     
-    bash << border[0] << border[1] * (width - 2) <<  border[2] << "\n"
-    (height - 2).times do
-      bash << border[3] << ' ' * (width - 2) << border[4]<< "\n"
+    bash <<  @builder.write(border[0] + border[1] * (width - 2) +  border[2], font)
+    (height - 2).times do 
+      bash << @builder.move_position(-width, 1)
+      bash << @builder.write(border[3] + ' ' * (width - 2) + border[4], font)
     end
-    bash << border[5] << border[6] * (width - 2) << border[7]
+    bash << @builder.move_position(-width, 1)
+    bash << @builder.write(border[5] + border[6] * (width - 2) + border[7], font)
     
     bash << @builder.restore_position()
     print @builder.write(bash, font)
   end
   
   def draw_window(x, y, width, height, text = '', font = nil, border = BORDER_UTF_DOUBLE, text_wrap = ["\u2561","\u255E"])
-    raise 'width,height must be grait than 2' if (width < 3 or height < 3)
+    raise 'width,height must be great than 2' if (width < 3 or height < 3)
     
     text = text.slice(0, width - 2)
     if text.size < (width - 3) && (text_wrap.instance_of? Array)
@@ -102,11 +104,13 @@ class Console
     bash << @builder.save_position()
     bash << @builder.set_position(x,y)
     
-    bash << border[0] << text <<  border[2] << "\n"
+    bash << @builder.write(border[0] + text +  border[2], font)
     (height - 2).times do
-      bash << border[3] << ' ' * (width - 2) << border[4]<< "\n"
+      bash << @builder.move_position(-width, 1)
+      bash << @builder.write(border[3] + ' ' * (width - 2) + border[4], font)
     end
-    bash << border[5] << border[6] * (width - 2) << border[7]
+    bash << @builder.move_position(-width, 1)
+    bash << @builder.write(border[5] + border[6] * (width - 2) + border[7], font)
     
     bash << @builder.restore_position()
     print @builder.write(bash, font)
