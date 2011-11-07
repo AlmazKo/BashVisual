@@ -14,18 +14,24 @@ default_font = Font.new(Font::STD, Font::LIGHT_BLUE)
 console = Console.new(default_font)
 console.clear()
 
-font_scroll = Font.new(Font::STD, Font::YELLOW, Font::BLACK)
+window_font = Font.new(Font::STD, Font::WHITE, Font::BLUE)
+background_font = Font.new(Font::STD, Font::WHITE, Font::LIGHT_GRAY)
+console.draw_rectangle(0, 31, 124, 12, background_font)
+console.draw_window(0, 32, 122, 6, 'Example List', window_font, Console::BORDER_UTF_ROUND, [' ', ' '])
+
+font_scroll = Font.new(Font::STD, Font::YELLOW)
 
 scroll = VerticalScroll.new(
   coordinates: [41, 1],
-  window_size: [80, 30],
-  message_block_size: 3,
+  window_size: [80, 28],
+  message_block_size: 23,
   font: font_scroll,
-  separator: "\u2500",
+  separator: "\u2508",
   start: Scroll::ENDING,
   adapt_size_message: false,
   prefix: ->{ Time.now.strftime('%H-%M-%S:%3N') << " " }
 )
+
 scroll2 = HorizontalScroll.new(
   coordinates: [1, 32],
   window_size: [120, 4],
@@ -42,9 +48,10 @@ scroll2 = HorizontalScroll.new(
   y = rand(30)
   console.write_to_position(x, y, '.', font)
 
-  #scroll.add('' << RandomText::get() << "  \n#{x} #{y}\n1221"*2)
-  font = Font.new(Font::STD, Font::rand_color(font_scroll.background))
+ # scroll.add('' << RandomText::get() << "  \n#{x} #{y}\n1221"*2)
+  font = Font.new(Font::STD, Font::rand_color(Font::BLACK), Font::BLACK)
   scroll.add(RandomText::get() << "\n 6", font)
+  font = Font.new(Font::STD, window_font.foreground, window_font.background)
   scroll2.add(RandomText::get(), font)
 
   sleep(0.3)
