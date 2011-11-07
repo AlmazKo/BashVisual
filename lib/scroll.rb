@@ -49,7 +49,7 @@ class Scroll
   def add (message, font = @font)
     
     if @stack.size.zero? 
-      print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, @font)
+      print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
     end
     
     @stack << {

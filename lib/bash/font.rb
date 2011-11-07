@@ -34,7 +34,7 @@ class Font
     
     @bash_command = ''
 
-    @string = "<type=%s, background=%s. foreground=%s>" % [@font, @foreground, @background]
+    @string = "<type=%s, foreground=%s, background=%s>" % [@font, @foreground, @background]
     if font == STD
       if foreground and foreground < 10
         @bash_command << "\e[3#{foreground}m"
