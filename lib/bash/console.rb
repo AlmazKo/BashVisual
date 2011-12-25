@@ -1,3 +1,4 @@
+# coding: utf-8
 $:.unshift(File.dirname(__FILE__))
 require 'font'
 require 'builder'
@@ -31,9 +32,9 @@ class Console
     @builder = builder
   end
   
-  def position= (x, y)
-    @current_x , @current_y = x, y
-    print @builder.set_position(x, y)
+  def position= coord
+    @current_x , @current_y = *coord
+    print @builder.set_position(@current_x, @current_y)
   end
   
   def move_position(offset_x, offset_y)
