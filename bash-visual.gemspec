@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
-require File.expand_path('../lib/bash-visual/version', __FILE__)
+
+Dir[File.dirname(__FILE__) + '/lib/bash-visual/*.rb'].each {|file| require file }
 
 Gem::Specification.new do |gem|
   gem.name          = 'bash-visual'
