@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    bash-visual (1.0.1)
+    bash-visual (1.0.4)
 
 GEM
   remote: https://rubygems.org/
