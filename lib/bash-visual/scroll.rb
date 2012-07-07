@@ -9,6 +9,20 @@ module Bash_Visual
 
     attr_accessor :console
 
+
+    # @param [Hash] options
+    #
+    # options = {
+    #   coordinates: [x, y],
+    #   window_size: [width, height],
+    #   font: Font.new
+    #   start: Scroll::ENDING,
+    #   adapt_size_message: true,
+    #   prefix: -> { '>' }
+    #   separator: '-'
+    # }
+    #
+    #
     def initialize(options)
 
       @x, @y = options[:coordinates]
@@ -35,15 +49,18 @@ module Bash_Visual
       @font = options[:font] ? options[:font] : nil
 
       @stack = []
-      @console = Console.new @font,Console::OUTPUT_STRING
+      @console = Console.new @font, Console::OUTPUT_STRING
       @mutex = Mutex.new
+      nil
     end
 
     def scroll(positions = 1, direction = @direction * positions)
 
     end
 
-    def add (message, font = @font)
+    # @param [String] message
+    # @param [Bash_Visual::Font] font
+    def add(message, font = @font)
 
       if @stack.size.zero?
         print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
@@ -56,8 +73,11 @@ module Bash_Visual
 
       redraw()
       #@stack.slice!(-index, index)
+      nil
     end
 
+
+    # @param [Object] prefix
     def prefix= (prefix)
       @prefix = prefix
     end
@@ -89,7 +109,9 @@ module Bash_Visual
     end
 
     # сделать переносы в массиве строк
-    def rows_wrap! arr, max_len
+    # @param [String] arr
+    # @param [Integer] max_len
+    def rows_wrap!(arr, max_len)
       max_used_len = 1
       arr.each_with_index do |row, i|
         len = row.size
@@ -101,9 +123,11 @@ module Bash_Visual
       max_used_len
     end
 
-    def write (x, y, message, font)
-
-
+    # @param [Integer] x
+    # @param [Integer] y
+    # @param [Array] message
+    # @param [Bash_Visual::Font] font
+    def write(x, y, message, font)
       string = ''
       message.each_with_index { |text, i|
        string << @console.write_to_position(x, y + i, text, font)
