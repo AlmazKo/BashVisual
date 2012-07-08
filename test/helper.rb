@@ -1,6 +1,7 @@
-gem "mocha", :require => false
+$:.unshift(File.dirname(__FILE__) + '/..')
 
+require "simplecov"
 require "test/unit"
-
-
-require "mocha"
+require "bash-visual"
+SimpleCov.coverage_dir('.coverage')
+SimpleCov.start

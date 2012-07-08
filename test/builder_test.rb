@@ -2,8 +2,8 @@
 $:.unshift(File.dirname(__FILE__))
 
 require 'helper'
-require "../lib/bash-visual/builder"
-require "../lib/bash-visual/font"
+#require 'lib/bash-visual/builder'
+#require 'lib/bash-visual/font'
 
 class BuilderTest < Test::Unit::TestCase
 
@@ -22,6 +22,7 @@ class BuilderTest < Test::Unit::TestCase
 
 
   def test_clear
+
     font_mock = Bash_Visual::Font.new
     font_mock.to_bash {'X'}
 
