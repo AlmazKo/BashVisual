@@ -23,7 +23,7 @@ module Bash_Visual
     def initialize (font = Font.new, way_outnput = OUTPUT_WITHOUT_BLOCK, builder = Builder.new)
       @current_x = 0
       @current_y = 0
-      @font = font
+      @type = font
       @way_output = way_outnput
       @builder = builder
     end
@@ -42,15 +42,15 @@ module Bash_Visual
     # Записать что-то в определенной позиции, а потом вернуться на текущую
     # Если необходимо сохранить позицию после записи - используйте связку
     # move_position/position= и write
-    def write_to_position (x, y, text, font = @font)
+    def write_to_position (x, y, text, font = @type)
       print @builder.write_to_position(x, y, text, font)
     end
 
-    def write (text, font = @font)
+    def write (text, font = @type)
       print @builder.write(text, font)
     end
 
-    def write_ln (text, font = @font)
+    def write_ln (text, font = @type)
       print @builder.write_ln(text, font)
     end
 
@@ -121,7 +121,15 @@ module Bash_Visual
     end
 
     def font= font
-      @font = font
+      @type = font
+    end
+
+    def lines
+      `tput lines`
+    end
+
+    def cols
+      `tput cols`
     end
 
     private

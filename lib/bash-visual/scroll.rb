@@ -46,10 +46,10 @@ module Bash_Visual
       @is_wrap = true
       @start = options[:start] ? ENDING : BEGINNING
       @separator = options[:separator] ? options[:separator] : false
-      @font = options[:font] ? options[:font] : nil
+      @type = options[:type] ? options[:type] : nil
 
       @stack = []
-      @console = Console.new @font, Console::OUTPUT_STRING
+      @console = Console.new @type, Console::OUTPUT_STRING
       @mutex = Mutex.new
       nil
     end
@@ -60,7 +60,7 @@ module Bash_Visual
 
     # @param [String] message
     # @param [Bash_Visual::Font] font
-    def add(message, font = @font)
+    def add(message, font = @type)
 
       if @stack.size.zero?
         print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
@@ -68,7 +68,7 @@ module Bash_Visual
 
       @stack << {
         message: prefix() << message.to_s,
-           font: font
+           type: font
       }
 
       redraw()
@@ -97,9 +97,9 @@ module Bash_Visual
       @stack.reverse.each do |item|
 
         message = item[:message].dup.lines.to_a
-        font = item[:font]
+        font = item[:type]
         unless font.background
-          font = Font.new font.font, font.foreground, @font.background
+          font = Font.new font.type, font.foreground, @type.background
         end
 
         avail_area = print_message(message, font, avail_area)

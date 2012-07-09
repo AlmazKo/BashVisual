@@ -23,7 +23,7 @@ module Bash_Visual
       "\e[s"
     end
 
-    def set_position (x, y)
+    def set_position(x, y)
       "\e[#{y.to_i};#{x.to_i}H"
     end
 
@@ -42,7 +42,7 @@ module Bash_Visual
       bash
     end
 
-    def write_to_position (x, y, text, font = @default_font)
+    def write_to_position(x, y, text, font = @default_font)
       bash = ''
       bash << save_position()
       bash << move_position(x, y)
@@ -51,11 +51,11 @@ module Bash_Visual
       bash
     end
 
-    def write (text, font = @default_font)
+    def write(text, font = @default_font)
       font.to_bash + text + Font::RESET
     end
 
-    def write_ln (text, font = @default_font)
+    def write_ln(text, font = @default_font)
       font.to_bash + text << "\n" << Font::RESET
     end
   end
