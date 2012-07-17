@@ -92,7 +92,7 @@ module Bash_Visual
         if @background < 10
           @bash_command << ";4#{@background}"
         else
-          @bash_command << ";9#{@background - 10}"
+          @bash_command << ";10#{@background - 10}"
         end
       end
 
