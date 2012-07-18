@@ -50,7 +50,12 @@ module Bash_Visual
       print @builder.write(text, font)
     end
 
-    def write_ln (text, font = @type)
+    def write_ln (text = nil, font = @type)
+      if text.nil?
+        print $/
+        return
+      end
+
       print @builder.write_ln(text, font)
     end
 
