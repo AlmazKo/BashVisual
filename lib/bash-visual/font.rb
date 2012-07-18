@@ -1,108 +1,96 @@
 module Bash_Visual
   class Font
-    BLACK = 0
-    RED = 1
-    GREEN = 2
-    BROWN = 3
-    BLUE = 4
-    MAGENTA = 5
-    CYAN = 6
-    LIGHT_GRAY = 7
 
-    GRAY = 10
-    LIGHT_RED = 11
-    LIGHT_GREEN = 12
-    YELLOW = 13
-    LIGHT_BLUE = 14
-    LIGHT_MAGENTA = 15
-    LIGHT_CYAN = 16
-    WHITE = 17
+    COLORS = [:black, :dark_red, :dark_green, :dark_yellow, :dark_blue, :dark_magenta, :dark_cyan, :grey,
+              :dark_grey, :red, :green, :yellow, :blue, :magenta, :cyan, :white]
 
-    RESET = "\e[0m"
+    TYPES = [:std, :bold, :underline, :blink]
 
-    #type font
-    STD = 0
-    BOLD = 1
-    UNDERLINE = 2
-    BLINK = 4
+    @@colors_map = {
+        black:        0,
+        dark_red:     1,
+        dark_green:   2,
+        dark_yellow:  3,
+        dark_blue:    4,
+        dark_magenta: 5,
+        dark_cyan:    6,
+        grey:         7,
+        dark_grey:    10,
+        red:          11,
+        green:        12,
+        yellow:       13,
+        blue:         14,
+        magenta:      15,
+        cyan:         16,
+        white:        17
+    }
 
-    attr_reader :type, :foreground, :background
+    @@types_map = {
+        std:       0,
+        bold:      1,
+        underline: 4,
+        blink:     5
+    }
 
-    def parse_types(types)
-      base_type = 0
-      additional_types = []
+    RESET     = "\e[0m"
 
-      if types.include? BLINK
-        base_type = 5
+    attr_reader :types, :foreground, :background
 
-        if types.include? BOLD
-          additional_types << 1
-        end
+    def initialize(types = :std, foreground = :white, background = nil)
 
-        if types.include? UNDERLINE
-          additional_types << 4
-        end
-
-      else
-
-        if types.include? BOLD
-          base_type = 1
-        end
-
-        if types.include? UNDERLINE
-          if base_type.zero?
-            base_type = 4
-          else
-            additional_types << 4
-          end
-        end
+      unless COLORS.include?(foreground)
+        raise "not found color #{foreground}"
       end
 
-      return base_type, additional_types
+      @foreground, @background = foreground, background
+
+      @types = prepare_types types
+
+      sequence = []
+      @types.each do |type|
+        sequence << @@types_map[type]
+      end
+
+      color_index = @@colors_map[@foreground]
+
+      sequence << if color_index < 10
+                    "3#{color_index}"
+                  else
+                    "9#{color_index - 10}"
+                  end
+
+      if @background
+        color_index = @@colors_map[@background]
+        sequence << if color_index < 10
+                      "4#{color_index}"
+                    else
+                      "10#{color_index - 10}"
+                    end
+      end
+
+      @bash_command = "\e[#{sequence.join(';')}m"
     end
 
 
-    def initialize(type = STD, foreground = WHITE, background = nil)
-
-      raise "not found color #{foreground}" unless (0..7).cover? foreground or (10..17).cover? foreground
-
-      @type, @foreground, @background = type, foreground, background
-
-      unless @type.is_a? Enumerable
-        @type = [@type]
-      end
-
-      base_type, additional_types = parse_types @type
-
-      @bash_command = ''
-
-      additional_types.each do |value|
-        @bash_command << "\e[#{value}m"
-      end
-
-      @bash_command << "\e[#{base_type};"
-
-      if @foreground < 10
-        @bash_command << "3#{@foreground}"
-      else
-        @bash_command << "9#{@foreground - 10}"
-      end
-
-      if @background
-        if @background < 10
-          @bash_command << ";4#{@background}"
+    # @return [Array]
+    def prepare_types(types)
+      case types
+        when Symbol then
+          [types]
+        when Array then
+          if types.size > 2
+            types.delete_if { |type| type == :std }
+          else
+            types
+          end
         else
-          @bash_command << ";10#{@background - 10}"
-        end
+          raise "types must be Array or Symbol"
       end
-
-      @bash_command << 'm'
-
     end
 
     def inspect
-      "<Font type=%s, foreground=%s, background=%s>" %
-          [@type, @foreground, (@background ? @background : 'nil')]
+      "<Font types=%s, foreground=%s, background=%s>" %
+          [@types, @foreground, (@background ? @background : 'nil')]
     end
 
     def to_s
@@ -112,16 +100,21 @@ module Bash_Visual
     alias to_bash to_s
 
     class << self
+
+      # @param [Symbol] exclude_color
       def rand_color (exclude_color = nil)
         color = rand(16)
+        color += 2 if color > 7
 
-        if color == exclude_color
+        if color == @@colors_map[exclude_color]
           color += 1
-          color = 0 if color > 15
+          color = 0 if color > 17
         end
 
-        color += 2 if color > 7
-        color
+        @@colors_map.each do |name, code|
+          return name if code == color
+        end
+
       end
     end
 

@@ -52,7 +52,7 @@ module Bash_Visual
     end
 
     def write(text, font = @default_font)
-      font.to_s + text + Font::RESET
+      font.to_bash + text + Font::RESET
     end
 
     def write_ln(text, font = @default_font)
