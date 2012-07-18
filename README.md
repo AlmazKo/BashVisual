@@ -11,6 +11,7 @@ BashVisual allows:
 - create dynamic scrolling objects
 - get window parameters (weight, height)
 
+[See the wiki!](https://github.com/AlmazKo/BashVisual/wiki)
 
 ## Installation
 
