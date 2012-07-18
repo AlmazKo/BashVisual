@@ -32,7 +32,7 @@ module Bash_Visual
       end
 
       if @separator == true
-        message[message.size-1] = Font.new(Font::UNDERLINE, font.foreground, font.background).to_bash +
+        message[message.size-1] = Font.new(:underline, font.foreground, font.background).to_bash +
           message.last.ljust(available_area_width, ' ')
       end
 

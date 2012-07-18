@@ -10,82 +10,70 @@ class FontTest < Test::Unit::TestCase
 
     font = Font.new
 
-    expected = '<Font type=%s, foreground=%s, background=nil>' %
-        [font.type, font.foreground]
+    expected = '<Font types=%s, foreground=%s, background=nil>' %
+        [font.types, font.foreground]
 
     assert_equal(expected, font.inspect)
   end
 
   def test_font_all
-    font = Font.new([Font::UNDERLINE, Font::BOLD, Font::BLINK])
+    font = Font.new([:underline, :bold, :blink])
+    expected = ["\e[1;4;5;97m", "\e[1;5;4;97m","\e[4;1;5;97m", "\e[4;5;1;97m", "\e[5;1;4;97m", "\e[5;4;1;97m"]
 
-    expected = ["\e[4m\e[1m\e[5;97m", "\e[1m\e[4m\e[5;97m"]
     assert_include expected, font.to_s
   end
 
   def test_font_without_blink
-    font = Font.new([Font::UNDERLINE, Font::BOLD])
+    font = Font.new [:underline, :bold]
 
-    expected = ["\e[4m\e[1;97m", "\e[1m\e[4;97m"]
+    expected = ["\e[4;1;97m", "\e[1;4;97m"]
     assert_include expected, font.to_s
   end
 
   def test_font_underline
-    font = Font.new(Font::UNDERLINE)
+    font = Font.new(:underline)
 
     assert_equal "\e[4;97m", font.to_s
   end
 
   def test_font_bold
-    font = Font.new([Font::BOLD])
+    font = Font.new([:bold])
 
     assert_equal "\e[1;97m", font.to_s
   end
 
   def test_font_foreground
-    font = Font.new(Font::STD, Font::CYAN)
+    font = Font.new(:std, :dark_cyan)
     assert_equal "\e[0;36m", font.to_s
 
-    font = Font.new(Font::STD, Font::LIGHT_GREEN)
+    font = Font.new(:std, :green)
     assert_equal "\e[0;92m", font.to_s
   end
 
 
   def test_font_background
-    font = Font.new(Font::STD, Font::WHITE, Font::CYAN)
+    font = Font.new(:std, :white, :dark_cyan)
     assert_equal "\e[0;97;46m", font.to_s
 
-    font = Font.new(Font::STD, Font::WHITE, Font::LIGHT_GREEN)
-    assert_equal "\e[0;97;92m", font.to_s
+    font = Font.new(:std, :white, :green)
+    assert_equal "\e[0;97;102m", font.to_s
   end
 
 
   def test_rand_color
-    mock_class_method(Font, :rand, "def rand (max=0); 3; end")
-    color = Bash_Visual::Font::rand_color
-    assert_equal 3, color
+    mock_class_method(Font, "def rand (max=0); 3; end")
+    color = Font::rand_color
+    assert_equal :dark_yellow, color
 
-    mock_class_method(Font, :rand, "def rand (max=0); 15; end")
-    color = Bash_Visual::Font::rand_color
-    assert_equal 17, color
-
-    mock_class_method(Font, :rand, "def rand (max=0); 1; end")
-    color = Bash_Visual::Font::rand_color 4
-    assert_equal 1, color
-
-    mock_class_method(Font, :rand, "def rand (max=0); 4; end")
-    color = Bash_Visual::Font::rand_color 4
-    assert_equal 5, color
-
-    mock_class_method(Font, :rand, "def rand (max=0); 15; end")
-    color = Bash_Visual::Font::rand_color 15
-    assert_equal 0, color
+    mock_class_method(Font, "def rand (max=0); 15; end")
+    color = Font::rand_color :white
+    assert_not_equal(color, :white)
 
   end
 
   protected
 
-  def mock_class_method(class_name, method, eval_string)
+  def mock_class_method(class_name, eval_string)
     eigenclass = class << class_name
       self
     end
