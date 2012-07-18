@@ -56,7 +56,7 @@ module Bash_Visual
     end
 
     def write_ln(text, font = @default_font)
-      font.to_bash + text << "\n" << Font::RESET
+      font.to_bash + text.to_s + $/ + Font::RESET
     end
   end
 end

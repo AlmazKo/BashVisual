@@ -1,6 +1,16 @@
-# Bash::Visual
+# Bash-Visual
 
-Bash visualisation tools
+Bash visualisation library
+
+## Description
+**BashVisual** simplifies Unix-console operation (bash, csh etc). It uses _tput_ and standard Unix-terminal facilities. It is also thread-safe.
+
+BashVisual allows:
+- control position, colors and text's form
+- draw graphical primitives (rectangle, window)
+- create dynamic scrolling objects
+- get window parameters (weight, height)
+
 
 ## Installation
 
@@ -18,13 +28,18 @@ Or install it yourself as:
 
 ## Usage
 ```ruby
-    include Bash_Visual;
-    font = Font.new(Font::STD, Font::LIGHT_BLUE)
-    console = Console.new(font)
-    console.clear()
-    console.draw_window(2, 2, 20, 5, 'Example', font, Console::BORDER_UTF_DOUBLE)
-    console.write_to_position(5, 3, 'Hello World!', Font.new(Font::BOLD, Font::LIGHT_GREEN))
-    console.position = [0, 8]
+require 'bash-visual'
+include Bash_Visual
+
+border_font = Font.new(:std, :blue)
+main_color = Font.new(:bold, :green)
+
+console = Console.new(main_color)
+console.clear
+
+console.draw_window(2, 2, 20, 5, 'Example', border_font, Console::BORDER_UTF_DOUBLE)
+console.write_to_position(5, 3, 'Hello World!')
+console.position = [0, 8]
 ```
 
 ## Contributing
