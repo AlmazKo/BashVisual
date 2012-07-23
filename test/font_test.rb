@@ -71,6 +71,40 @@ class FontTest < Test::Unit::TestCase
 
   end
 
+  def test_illegal_color
+    assert_raise_message "Illegal color wrong_color" do
+      font = Font.new :std, :wrong_color
+    end
+  end
+
+  def test_add_type
+    font = Font.new
+
+    assert_false(font.add_type :std)
+
+    assert_true(font.add_type :bold)
+    assert_equal [:bold], font.types
+
+    assert_true(font.add_type :underline)
+    assert_equal [:bold, :underline], font.types
+  end
+
+
+  def test_remove_type
+    font = Font.new
+
+    assert_false(font.remove_type :std)
+    assert_equal [:std], font.types
+
+    font.add_type :underline
+    assert_false(font.remove_type :std)
+
+    assert_true(font.add_type :bold)
+    font.remove_type :underline
+    assert_equal [:bold], font.types
+
+  end
+
   protected
 
   def mock_class_method(class_name, eval_string)

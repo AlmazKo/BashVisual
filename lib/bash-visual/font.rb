@@ -2,7 +2,7 @@ module Bash_Visual
   class Font
 
     COLORS = [:black, :dark_red, :dark_green, :dark_yellow, :dark_blue, :dark_magenta, :dark_cyan, :grey,
-              :dark_grey, :red, :green, :yellow, :blue, :magenta, :cyan, :white]
+        :dark_grey, :red, :green, :yellow, :blue, :magenta, :cyan, :white]
 
     TYPES = [:std, :bold, :underline, :blink]
 
@@ -32,14 +32,71 @@ module Bash_Visual
         blink:     5
     }
 
-    RESET     = "\e[0m"
+    RESET = "\e[0m"
 
     attr_reader :types, :foreground, :background
 
     def initialize(types = :std, foreground = :white, background = nil)
 
+      build(types, foreground, background)
+    end
+
+    def add_type(type)
+      return false if @types.include? type
+
+      @types << type
+      build(@types, @foreground, @background)
+
+      true
+    end
+
+    def remove_type(type)
+
+      return false unless @types.include? type
+      return false if @types == [:std]
+
+      @types.delete type
+      build(@types, @foreground, @background)
+
+      true
+    end
+
+    def inspect
+      "<Font types=%s, foreground=%s, background=%s>" %
+          [@types, @foreground, (@background ? @background : 'nil')]
+    end
+
+    def to_s
+      @bash_command
+    end
+
+    alias to_bash to_s
+
+    class << self
+
+      # @param [Symbol] exclude_color
+      def rand_color (exclude_color = nil)
+        color = rand(16)
+        color += 2 if color > 7
+
+        if color == @@colors_map[exclude_color]
+          color += 1
+          color = 0 if color > 17
+        end
+
+        @@colors_map.each do |name, code|
+          return name if code == color
+        end
+
+      end
+    end
+
+    private
+
+    def build(types, foreground, background)
+
       unless COLORS.include?(foreground)
-        raise "not found color #{foreground}"
+        raise "Illegal color #{foreground}"
       end
 
       @foreground, @background = foreground, background
@@ -74,48 +131,24 @@ module Bash_Visual
 
     # @return [Array]
     def prepare_types(types)
-      case types
-        when Symbol then
-          [types]
-        when Array then
-          if types.size > 2
-            types.delete_if { |type| type == :std }
-          else
-            types
-          end
-        else
-          raise "types must be Array or Symbol"
+      types = case types
+                when Symbol then
+                  [types]
+                when Array then
+                  if types.size > 2
+                    types.delete_if { |type| type == :std }
+                  else
+                    types
+                  end
+                else
+                  raise "types must be Array or Symbol"
+              end
+
+      if types.size > 1 && types.include?(:std)
+        types.delete :std
       end
-    end
 
-    def inspect
-      "<Font types=%s, foreground=%s, background=%s>" %
-          [@types, @foreground, (@background ? @background : 'nil')]
-    end
-
-    def to_s
-      @bash_command
-    end
-
-    alias to_bash to_s
-
-    class << self
-
-      # @param [Symbol] exclude_color
-      def rand_color (exclude_color = nil)
-        color = rand(16)
-        color += 2 if color > 7
-
-        if color == @@colors_map[exclude_color]
-          color += 1
-          color = 0 if color > 17
-        end
-
-        @@colors_map.each do |name, code|
-          return name if code == color
-        end
-
-      end
+      types
     end
 
   end
