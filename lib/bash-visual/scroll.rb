@@ -25,19 +25,15 @@ module Bash_Visual
     #
     def initialize(options)
 
-      @x, @y = options[:coordinates]
-      @x = @x.to_i
-      @y = @y.to_i
+      unless  options[:coordinates] && options[:window_size]
+        raise "Minimum needs: :window_size and :coordinates"
+      end
 
-      raise ':window_size isn\'t array' unless options[:window_size].instance_of? Array
-      raise 'size :window_size must be great than 1' if options[:window_size].size < 2
+      @x, @y = options[:coordinates]
 
       @area_width, @area_height = options[:window_size]
-      @area_width = @area_width.to_i
-      @area_height = @area_height.to_i
 
       @message_block_size = options[:message_block_size] ? options[:message_block_size].to_i : 1
-      @message_block_size = 1 if @message_block_size < 1
 
       @prefix = options[:prefix] ? options[:prefix] : nil
 
@@ -46,10 +42,10 @@ module Bash_Visual
       @is_wrap = true
       @start = options[:start] ? ENDING : BEGINNING
       @separator = options[:separator] ? options[:separator] : false
-      @type = options[:type] ? options[:type] : nil
+      @font = options[:font] ? options[:font] : nil
 
       @stack = []
-      @console = Console.new @type, Console::OUTPUT_STRING
+      @console = Console.new @font, Console::OUTPUT_STRING
       @mutex = Mutex.new
       nil
     end
@@ -60,7 +56,7 @@ module Bash_Visual
 
     # @param [String] message
     # @param [Bash_Visual::Font] font
-    def add(message, font = @type)
+    def add(message, font = @font)
 
       if @stack.size.zero?
         print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
@@ -68,7 +64,7 @@ module Bash_Visual
 
       @stack << {
         message: prefix() << message.to_s,
-           type: font
+           font: font
       }
 
       redraw()
@@ -97,9 +93,9 @@ module Bash_Visual
       @stack.reverse.each do |item|
 
         message = item[:message].dup.lines.to_a
-        font = item[:type]
+        font = item[:font]
         unless font.background
-          font = Font.new font.type, font.foreground, @type.background
+          font = Font.new font.font, font.foreground, @font.background
         end
 
         avail_area = print_message(message, font, avail_area)
