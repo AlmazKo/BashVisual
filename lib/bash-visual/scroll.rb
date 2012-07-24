@@ -42,7 +42,7 @@ module Bash_Visual
       @is_wrap = true
       @start = options[:start] ? ENDING : BEGINNING
       @separator = options[:separator] ? options[:separator] : false
-      @font = options[:font] ? options[:font] : nil
+      @font = options[:font] ? options[:font] : Font.new
 
       @stack = []
       @console = Console.new @font, Console::OUTPUT_STRING
@@ -58,9 +58,7 @@ module Bash_Visual
     # @param [Bash_Visual::Font] font
     def add(message, font = @font)
 
-      if @stack.size.zero?
-        print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
-      end
+      clear_area(font) if @stack.size.zero?
 
       @stack << {
         message: prefix() << message.to_s,
@@ -95,7 +93,7 @@ module Bash_Visual
         message = item[:message].dup.lines.to_a
         font = item[:font]
         unless font.background
-          font = Font.new font.font, font.foreground, @font.background
+          font = Font.new font.types, font.foreground, @font.background
         end
 
         avail_area = print_message(message, font, avail_area)
@@ -133,5 +131,11 @@ module Bash_Visual
         print string
       }
     end
+
+   private
+
+   def clear_area font
+     print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
+   end
   end
 end
