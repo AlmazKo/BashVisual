@@ -1,30 +1,22 @@
 module Bash_Visual
   class Console
+    include Painter
+
     @@mutex = Mutex.new
 
     OUTPUT_STRING = 0
     OUTPUT_WITHOUT_BLOCK = 1
     OUTPUT_WITH_BLOCK = 2
-    # see: http://en.wikipedia.org/wiki/Box-drawing_characters
-    BORDER_UTF         = ["\u250C","\u2500","\u2510",
-                          "\u2502",         "\u2502",
-                          "\u2514","\u2500","\u2518"]
-
-    BORDER_UTF_ROUND   = ["\u256D","\u2500","\u256E",
-                          "\u2502",         "\u2502",
-                          "\u2570","\u2500","\u256F"]
-
-    BORDER_UTF_DOUBLE  = ["\u2554","\u2550","\u2557",
-                          "\u2551",         "\u2551",
-                          "\u255A","\u2550","\u255D"]
-
     attr_reader :current_x, :current_y, :font;
 
-    def initialize (font = Font.new, way_outnput = OUTPUT_WITHOUT_BLOCK, builder = Builder.new)
+    # @param [Bash_Visual::Font] font
+    # @param [Object] way_output
+    # @param [Bash_Visual::Builder] builder
+    def initialize (font = Font.new, way_output = OUTPUT_WITHOUT_BLOCK, builder = Builder.new)
       @current_x = 0
       @current_y = 0
       @font = font
-      @way_output = way_outnput
+      @way_output = way_output
       @builder = builder
     end
 
@@ -50,72 +42,12 @@ module Bash_Visual
       print @builder.write(text, font)
     end
 
-    def write_ln (text = nil, font = @font)
-      if text.nil?
-        print $/
-        return
-      end
-
+    def write_ln (text = '', font = @font)
       print @builder.write_ln(text, font)
     end
 
     def erase_to_end_line
       print @builder.erase_to_end_line
-    end
-
-    def draw_rectangle(x, y, width, height, font = nil)
-      bash = ''
-      bash << @builder.save_position()
-      bash << @builder.set_position(x,y)
-      height.times do
-        bash << @builder.write(' ' * width, font)
-        bash << @builder.move_position(-width, 1)
-      end
-      bash << @builder.restore_position()
-      print @builder.write(bash, font)
-    end
-
-    def draw_border(x, y, width, height, font = nil, border = BORDER_UTF)
-      raise 'width,height must be great than 1' if (width < 2 or height < 2)
-
-      bash = ''
-      bash << @builder.save_position()
-      bash << @builder.set_position(x,y)
-
-      bash <<  @builder.write(border[0] + border[1] * (width - 2) +  border[2], font)
-      (height - 2).times do
-        bash << @builder.move_position(-width, 1)
-        bash << @builder.write(border[3] + ' ' * (width - 2) + border[4], font)
-      end
-      bash << @builder.move_position(-width, 1)
-      bash << @builder.write(border[5] + border[6] * (width - 2) + border[7], font)
-
-      bash << @builder.restore_position()
-      print @builder.write(bash, font)
-    end
-
-    def draw_window(x, y, width, height, text = '', font = nil, border = BORDER_UTF_DOUBLE, text_wrap = ["\u2561","\u255E"])
-      raise 'width,height must be great than 2' if (width < 3 or height < 3)
-
-      text = text.slice(0, width - 2)
-      if text.size < (width - 3) && (text_wrap.instance_of? Array)
-        text = text_wrap[0] + text + text_wrap[1]
-      end
-      text = text.center(width - 2, border[1])
-      bash = ''
-      bash << @builder.save_position()
-      bash << @builder.set_position(x,y)
-
-      bash << @builder.write(border[0] + text +  border[2], font)
-      (height - 2).times do
-        bash << @builder.move_position(-width, 1)
-        bash << @builder.write(border[3] + ' ' * (width - 2) + border[4], font)
-      end
-      bash << @builder.move_position(-width, 1)
-      bash << @builder.write(border[5] + border[6] * (width - 2) + border[7], font)
-
-      bash << @builder.restore_position()
-      print @builder.write(bash, font)
     end
 
     # Clear the screen and move to (0,0)

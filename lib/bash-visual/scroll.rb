@@ -1,5 +1,7 @@
 module Bash_Visual
- class Scroll
+  class Scroll
+
+    include FixedObject
 
     FORWARD  = 1
     BACKWARD = -1
@@ -7,15 +9,15 @@ module Bash_Visual
     BEGINNING = false
     ENDING    = true
 
-    attr_accessor :console
+    attr_reader :console
 
 
     # @param [Hash] options
     #
     # options = {
-    #   coordinates: [x, y],
-    #   window_size: [width, height],
-    #   font: Font.new
+    #   position: [x, y],
+    #   size: [width, height],
+    #   font: Font.new (:bold)
     #   start: Scroll::ENDING,
     #   adapt_size_message: true,
     #   prefix: -> { '>' }
@@ -25,29 +27,28 @@ module Bash_Visual
     #
     def initialize(options)
 
-      unless  options[:coordinates] && options[:window_size]
-        raise "Minimum needs: :window_size and :coordinates"
+      unless  options[:position] && options[:size]
+        raise "Minimum needs: :size and :position"
       end
 
-      @x, @y = options[:coordinates]
+      @width, @height = options[:size]
+      @x, @y          = options[:position]
+      @prefix         = options[:prefix]
+      @adapt          = options[:adapt].nil? ? true : options[:adapt]
+      @separator      = options[:separator]
 
-      @area_width, @area_height = options[:window_size]
+      @max_message_block_size   = options[:max_message_block_size]
+      @fixed_message_block_size = options[:fixed_message_block_size]
 
-      @message_block_size = options[:message_block_size] ? options[:message_block_size].to_i : 1
-
-      @prefix = options[:prefix] ? options[:prefix] : nil
-
-      @adapt_size_message = options[:adapt_size_message] ? options[:adapt_size_message] : false
-
-      @is_wrap = true
       @start = options[:start] ? ENDING : BEGINNING
-      @separator = options[:separator] ? options[:separator] : false
-      @font = options[:font] ? options[:font] : Font.new
+      @font  = options[:font] ? options[:font] : Font.new
 
-      @stack = []
+      @stack     = []
+      @stateless = false
+
       @console = Console.new @font, Console::OUTPUT_STRING
-      @mutex = Mutex.new
-      nil
+      @mutex   = Mutex.new
+
     end
 
     def scroll(positions = 1, direction = @direction * positions)
@@ -58,63 +59,62 @@ module Bash_Visual
     # @param [Bash_Visual::Font] font
     def add(message, font = @font)
 
-      clear_area(font) if @stack.size.zero?
+      unless font.background
+        font = Font.new font.types, font.foreground, @font.background
+      end
 
-      @stack << {
-        message: prefix() << message.to_s,
-           font: font
-      }
+      @stack << {message: prefix() + message.to_s, font: font}
 
-      redraw()
-      #@stack.slice!(-index, index)
+      clear
+      redraw
+
       nil
     end
 
 
-    # @param [Object] prefix
+    # @param [Proc] prefix
     def prefix= (prefix)
       @prefix = prefix
     end
 
     def prefix
-      if (defined? @prefix.call)
-        @prefix[].to_s
-      else
-        ''
+      return @prefix[].to_s if (defined? @prefix.call)
+      ''
+    end
+
+    class << self
+      def form_block(text, size, fixate = false)
+        width, height = size
+        result        = []
+
+        height.times do |i|
+          line = text[i * width, width]
+
+          unless line
+            break unless fixate
+            result.fill(' ' * width, i, height - i)
+            break
+          end
+
+          result << line.ljust(width)
+        end
+
+        result
       end
     end
 
     private
 
     def redraw
-      avail_area = [@area_width, @area_height]
+      avail_area = [@width, @height]
       @stack.reverse.each do |item|
 
-        message = item[:message].dup.lines.to_a
-        font = item[:font]
-        unless font.background
-          font = Font.new font.types, font.foreground, @font.background
-        end
-
+        message    = item[:message]
+        font       = item[:font]
         avail_area = print_message(message, font, avail_area)
-        # выходим если закончилось место в области
+
         return nil if avail_area[0] <= 0 or avail_area[1] <= 0
       end
-    end
-
-    # сделать переносы в массиве строк
-    # @param [String] arr
-    # @param [Integer] max_len
-    def rows_wrap!(arr, max_len)
-      max_used_len = 1
-      arr.each_with_index do |row, i|
-        len = row.size
-        max_used_len = len if len > max_used_len
-        next if len <= max_len
-        tail = row.slice!(max_len,  len-max_len)
-        arr.insert(i+1, tail)
-      end
-      max_used_len
     end
 
     # @param [Integer] x
@@ -124,7 +124,7 @@ module Bash_Visual
     def write(x, y, message, font)
       string = ''
       message.each_with_index { |text, i|
-       string << @console.write_to_position(x, y + i, text, font)
+        string << @console.write_to_position(x, y + i, text, font)
       }
 
       @mutex.synchronize {
@@ -132,10 +132,11 @@ module Bash_Visual
       }
     end
 
-   private
+    private
 
-   def clear_area font
-     print @console.draw_rectangle(@x + 1, @y + 1, @area_width, @area_height, font)
-   end
+    # Clear scroll's area
+    def clear(font = @font)
+      print @console.draw_filled_rectangle([@x, @y], [@width, @height], font.background)
+    end
   end
 end

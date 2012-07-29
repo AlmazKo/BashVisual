@@ -42,7 +42,7 @@ module Bash_Visual
       bash
     end
 
-    def write_to_position(x, y, text, font = @default_font)
+    def write_to_position(x, y, text, font = nil)
       bash = ''
       bash << save_position()
       bash << move_position(x, y)
@@ -51,12 +51,14 @@ module Bash_Visual
       bash
     end
 
-    def write(text, font = @default_font)
+    def write(text, font = nil)
+      return text if font.nil?
       font.to_bash + text + Font::RESET
     end
 
-    def write_ln(text, font = @default_font)
-      font.to_bash + text.to_s + $/ + Font::RESET
+    def write_ln(text, font = nil)
+      return text + "\n" if font.nil?
+      font.to_bash + text.to_s + "\n" + Font::RESET
     end
   end
 end

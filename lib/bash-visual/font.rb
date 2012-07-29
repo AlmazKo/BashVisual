@@ -89,6 +89,11 @@ module Bash_Visual
         end
 
       end
+
+      def rand_font
+         color = self.rand_color
+         Font.new :std, color
+      end
     end
 
     private

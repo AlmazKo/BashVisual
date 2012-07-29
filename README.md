@@ -3,7 +3,7 @@
 Bash visualisation library
 
 ## Description
-**BashVisual** simplifies Unix-console operation (bash, csh etc). It uses _tput_ and standard Unix-terminal facilities. It is also thread-safe.
+**BashVisual** simplifies Unix-console operation (sh, bash, csh etc). It uses _tput_ and standard Unix-terminal facilities. It is also thread-safe.
 
 BashVisual allows:
 - control position, colors and text's form

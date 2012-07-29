@@ -1,14 +1,9 @@
 module Bash_Visual
   class VerticalScroll < Scroll
 
-    def initialize options
-      super
-      @message_block_height = @message_block_size
-    end
-
     def get_y_position available_area_height, message_size = 0
       if (@start == BEGINNING)
-        @y + (@area_height - available_area_height)
+        @y + (@height - available_area_height)
       else
         @y + available_area_height - message_size
       end
@@ -17,35 +12,28 @@ module Bash_Visual
     def print_message message, font, available_area
 
       available_area_width, available_area_height = available_area
-      avail_height = @message_block_height > available_area_height ? available_area_height : @message_block_height
 
-      rows_wrap!(message, available_area_width) if @is_wrap
+      msg_block_height =
+          case
+            when !@adapt
+              1
+            when @fixed_message_block_size
+              @fixed_message_block_size
+            when @max_message_block_size
+              @max_message_block_size
+            else
+              available_area_height
+          end
 
-      if @adapt_size_message
-        message = message.slice(0, available_area_height) if message.size > available_area_height
-      else
-        message = message.slice(0, avail_height) if message.size > avail_height
-      end
+      msg_block_height -= 1 if @separator
+      msg_block_height = available_area_height if msg_block_height > available_area_height
 
-      message.map! do |row|
-          row.strip.ljust(available_area_width)
-      end
-
-      if @separator == true
-        message[message.size-1] = Font.new(:underline, font.foreground, font.background).to_bash +
-          message.last.ljust(available_area_width, ' ')
-      end
-
-      if (@separator.instance_of? String)
-        if (message.size > available_area_height)
-          message[message.size-1] = @separator[0] * available_area_width
-        else
-          message << @separator[0] * available_area_width
-        end
+      message = Scroll.form_block message, [available_area_width, msg_block_height]
+      if @separator
+        message << @separator * available_area_width
       end
 
       write(@x, get_y_position(available_area_height, message.size), message, font)
-
 
       [available_area_width, available_area_height - message.size]
     end

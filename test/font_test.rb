@@ -71,6 +71,10 @@ class FontTest < Test::Unit::TestCase
 
   end
 
+  def test_rand
+    assert_instance_of Font, Font::rand_font
+  end
+
   def test_illegal_color
     assert_raise_message "Illegal color wrong_color" do
       font = Font.new :std, :wrong_color

@@ -5,18 +5,17 @@ module Bash_Visual
 
     def initialize options
       super
-      @message_block_width = @message_block_size
 
       @separator =
         if @separator == true;                  DEFAULT_SEPARATOR
-        elsif @separator.instance_of? String;   @separator[0]
+        elsif @s.instance_of? String;   @separator[0]
         else                                    nil
       end
     end
 
     def get_x_position available_area_width, message_width = 0
       if (@start == BEGINNING)
-        @x + (@area_width - available_area_width)
+        @x + (@width - available_area_width)
       else
         @x + available_area_width - message_width
       end
@@ -25,45 +24,33 @@ module Bash_Visual
     def print_message message, font, available_area
 
       available_area_width, available_area_height = available_area
-      avail_width = @message_block_width > available_area_width ? available_area_width : @message_block_width
 
-
-      (available_area_height - message.size).times {
-        message << ''
-      }
-
-      if @adapt_size_message
-        message_width = rows_wrap! message, available_area_width
-      else
-        rows_wrap! message, avail_width
-        message_width = avail_width
-      end
-
-      message = message.slice(0, available_area_height) if message.size > available_area_height
-
-      message.map! do |row|
-          row.strip.ljust(message_width)
-      end
-
-      if @separator and @separator.size.nonzero?
-        if @adapt_size_message
-          if message_width < available_area_width
-            message.map! do |row|
-                row << @separator
-            end
-            message_width += 1
+      msg_block_width =
+          case
+            when @fixed_message_block_size
+              @fixed_message_block_size
+            when @max_message_block_size
+              @max_message_block_size
+            else
+              available_area_width
           end
-        else
-          message.each do |row|
-              row[message_width-1] = @separator
-          end
+
+      msg_block_width -= 1 if @separator
+      msg_block_width = available_area_width if msg_block_width > available_area_width
+
+      #msg_block_height = @adapt ? available_area_height : 1
+
+      message = Scroll.form_block message, [msg_block_width, available_area_height], @fixed_message_block_size
+      if @separator
+        message.map! do |row|
+          row = row + DEFAULT_SEPARATOR
         end
       end
 
-      write(get_x_position(available_area_width, message_width), @y, message, font)
+      msg_block_width += 1
+      write(get_x_position(available_area_width, msg_block_width), @y, message, font)
 
-      [available_area_width - message_width, available_area_height]
+      [available_area_width - msg_block_width, available_area_height]
     end
-
   end
 end
