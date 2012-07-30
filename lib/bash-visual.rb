@@ -1,5 +1,5 @@
 require 'bash-visual/version'
-require 'bash-visual/Painter'
+require 'bash-visual/painter'
 require 'bash-visual/console'
 require 'bash-visual/font'
 require 'bash-visual/fixed_object'
