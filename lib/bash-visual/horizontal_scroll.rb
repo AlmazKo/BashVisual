@@ -25,7 +25,7 @@ module Bash_Visual
 
       available_area_width, available_area_height = available_area
 
-      msg_block_width =
+      block_width = msg_block_width =
           case
             when @fixed_message_block_size
               @fixed_message_block_size
@@ -35,22 +35,21 @@ module Bash_Visual
               available_area_width
           end
 
-      msg_block_width -= 1 if @separator
+      msg_block_width -= @separator.size if @separator
       msg_block_width = available_area_width if msg_block_width > available_area_width
 
-      #msg_block_height = @adapt ? available_area_height : 1
+      msg_block_height = @adapt ? available_area_height : 1
 
-      message = Scroll.form_block message, [msg_block_width, available_area_height], @fixed_message_block_size
+      message = Scroll.form_block message, [msg_block_width, msg_block_height], @fixed_message_block_size
       if @separator
         message.map! do |row|
-          row = row + DEFAULT_SEPARATOR
+          row + @separator
         end
       end
 
-      msg_block_width += 1
-      write(get_x_position(available_area_width, msg_block_width), @y, message, font)
+      write(get_x_position(available_area_width, block_width), @y, message, font)
 
-      [available_area_width - msg_block_width, available_area_height]
+      [available_area_width - block_width, available_area_height]
     end
   end
 end

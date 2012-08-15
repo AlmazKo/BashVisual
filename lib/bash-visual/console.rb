@@ -61,13 +61,6 @@ module Bash_Visual
       @font = font
     end
 
-    def lines
-      `tput lines`
-    end
-
-    def cols
-      `tput cols`
-    end
 
     private
     def print string
@@ -81,5 +74,14 @@ module Bash_Visual
       end
     end
 
+    class << self
+      def lines
+        `tput lines`
+      end
+
+      def cols
+        `tput cols`
+      end
+    end
   end
 end
