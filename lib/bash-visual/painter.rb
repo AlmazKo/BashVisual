@@ -19,11 +19,12 @@ module Bash_Visual
         "\u2551", "\u2551",
         "\u255A", "\u2550", "\u255D"]
 
-    # @param [Array] position
-    # @param [Array] size
-    def draw_filled_rectangle(position, size, color = :white)
-      x, y          = *position
-      width, height = *size
+
+
+    # @param [Array] positioning
+    # @param [Integer] color
+    def draw_filled_rectangle(*positioning, color)
+      x, y, width, height = prepare_positioning positioning
       raise 'width,height must be great than 1' if (width < 1 or height < 1)
 
       color = color.background if color.is_a? Font
@@ -40,13 +41,15 @@ module Bash_Visual
       print @builder.write(bash, font)
     end
 
-    # @param [Array] position
-    # @param [Array] size
-    def draw_border(position, size, params = {})
-      x, y          = *position
-      width, height = *size
-      raise 'width,height must be great than 1' if (width < 2 or height < 2)
+    # @param [Array] positioning
+    def draw_border(*positioning, &extra)
+      x, y, width, height = prepare_positioning positioning do |x2, y2, width2, height2|
+        next x2, y2, width2 + 2, height2 + 2
+      end
 
+      raise 'width,height must be great than 2' if (width < 2 or height < 2)
+
+      params = block_given? ? yield : {}
       border = params[:border] ? params[:border] : BORDER_UTF
       font   = params[:font] ? params[:font] : @font
 
@@ -67,14 +70,19 @@ module Bash_Visual
       print @builder.write(bash, font)
     end
 
-    # @param [Array] position
-    # @param [Array] size
+
+    # @param [Array] positioning
     # @param [String] text
-    # @param [Hash] params
-    def draw_window(position, size, text = '', params = {})
-      x, y          = *position
-      width, height = *size
+    def draw_window(*positioning, text, &params)
+
+      x, y, width, height = prepare_positioning positioning do |x2, y2, width2, height2|
+        next x2, y2, width2 + 2, height2 + 2
+      end
+
       raise 'width,height must be great than 2' if (width < 3 or height < 3)
+
+      params = block_given? ? yield : {}
+
 
       wrap   = params[:wrap].nil? ? @@default_window_wrap : params[:wrap]
       border = params[:border] ? params[:border] : BORDER_UTF
@@ -84,7 +92,11 @@ module Bash_Visual
       text = if wrap
                wrap_size  = wrap[0].size + wrap[1].size
                text_width = body_width - wrap_size
-               wrap[0] + text.to_s[0, text_width] + wrap[1]
+               if text_width < 0
+                 text.to_s.slice(0, body_width)
+               else
+                 wrap[0] + text.to_s[0, text_width] + wrap[1]
+               end
              else
                text.to_s.slice(0, body_width)
              end
@@ -106,5 +118,27 @@ module Bash_Visual
       bash << @builder.restore_position
       print @builder.write(bash, font)
     end
+
+    private
+    # @param [Array] positioning
+    def prepare_positioning(positioning, &extra)
+      if positioning.size == 2
+        x, y          = positioning[0]
+        width, height = positioning[1]
+      else
+        fixed_object = positioning[0]
+        raise 'Must be FixedObject' unless fixed_object.kind_of?(FixedObject)
+
+        x, y          = fixed_object.position
+        width, height = fixed_object.size
+
+        if block_given?
+          x,y,width,height = yield(x, y, width, height)
+        end
+      end
+
+      return x, y, width, height
+    end
+
   end
 end

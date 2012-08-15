@@ -6,9 +6,6 @@ include Bash_Visual
 console = Console.new
 console.clear
 
-console.draw_window([32, 0] ,[42, 11], 'Vertical scroll')
-console.draw_window([0, 12] ,[73, 6], 'Horizontal scroll')
-
 v_scroll = VerticalScroll.new(
   position: [33, 1],
   size: [39, 9],
@@ -21,6 +18,9 @@ h_scroll = HorizontalScroll.new(
     fixed_message_block_size: 20,
     separator: true
 )
+
+console.draw_window(v_scroll, 'Vertical scroll')
+console.draw_window(h_scroll, 'Horizontal scroll')
 
 phrases =[
     "Bash is a Unix shell",

@@ -12,7 +12,7 @@ Thread.new {
     5.times {
       x, y          = x+1, y+1
       width, height = width-2, height-2
-      console.draw_border([x, y], [width, height], {font: Font::rand_font})
+      console.draw_border([x, y], [width, height]) {{font: Font::rand_font}}
       sleep 0.08
     }
   }
